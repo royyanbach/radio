@@ -36,7 +36,6 @@ export default () => {
     (newIsPlayingState) => {
       setIsPlaying(newIsPlayingState);
       if (newIsPlayingState) {
-        // handleOnPlay();
         audio.current.play();
       } else {
         audio.current.pause();
@@ -110,7 +109,6 @@ export default () => {
             id="audio"
             ref={audio}
             controls
-            crossOrigin="anonymous"
             onPlay={handleAudioStateChange}
             onPause={handleAudioStateChange}
             onCanPlay={handleAudioReadinessChange}
