@@ -1,7 +1,12 @@
 import { h, createRef } from 'preact';
-import { useCallback, useEffect, useLayoutEffect, useState } from 'preact/hooks';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useState,
+} from 'preact/hooks';
 import debounce from 'lodash/debounce';
-import Wave from "@foobar404/wave"
+import Wave from '@foobar404/wave';
 
 import PlayButton from './PlayButton';
 
@@ -17,7 +22,7 @@ const IS_PLAYING_EVENT_MAP = {
 
 const IS_READY_EVENT_MAP = {
   canplay: true,
-}
+};
 
 export default () => {
   const audio = createRef();
@@ -25,24 +30,31 @@ export default () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [wave] = useState(new Wave());
+  const [controlContent, setControlContent] = useState(null);
 
-  const handlePlayButtonStateChange = useCallback((newIsPlayingState) => {
-    setIsPlaying(newIsPlayingState);
-    if (newIsPlayingState) {
-      // handleOnPlay();
-      audio.current.play();
-    } else {
-      audio.current.pause();
-    }
-  }, [audio]);
+  const handlePlayButtonStateChange = useCallback(
+    (newIsPlayingState) => {
+      setIsPlaying(newIsPlayingState);
+      if (newIsPlayingState) {
+        // handleOnPlay();
+        audio.current.play();
+      } else {
+        audio.current.pause();
+      }
+    },
+    [audio]
+  );
 
-  const handleAudioStateChange = useCallback((event) => {
-    const { type } = event;
-    const newEventPlayingState = IS_PLAYING_EVENT_MAP[type];
-    if (newEventPlayingState !== isPlaying) {
-      setIsPlaying(newEventPlayingState);
-    }
-  }, [isPlaying]);
+  const handleAudioStateChange = useCallback(
+    (event) => {
+      const { type } = event;
+      const newEventPlayingState = IS_PLAYING_EVENT_MAP[type];
+      if (newEventPlayingState !== isPlaying) {
+        setIsPlaying(newEventPlayingState);
+      }
+    },
+    [isPlaying]
+  );
 
   const handleAudioReadinessChange = useCallback((event) => {
     const { type } = event;
@@ -67,9 +79,9 @@ export default () => {
 
     // Handle spacebar key press
     const audioEl = audio.current;
-    const handleSpacePress = debounce(e => {
+    const handleSpacePress = debounce((e) => {
       // Do nothing if not <space> key
-      if (e.keyCode !== 32){
+      if (e.keyCode !== 32) {
         return;
       }
 
@@ -80,7 +92,7 @@ export default () => {
       }
     }, 1000);
     document.body.onkeyup = handleSpacePress;
-    return () => document.body.onkeyup = null;
+    return () => (document.body.onkeyup = null);
   }, []);
 
   return (
@@ -91,7 +103,7 @@ export default () => {
           <p className="station-name">Prambors Radio</p>
         </div>
         <div>
-          <canvas ref={canvasViz} id='viz' width="500" height="100"></canvas>
+          <canvas ref={canvasViz} id="viz" width="500" height="100"></canvas>
         </div>
         <div className="control">
           <audio
@@ -111,6 +123,10 @@ export default () => {
             isPlaying={isPlaying}
             isReady={isReady}
           />
+          <div className={`media-info animated ${isPlaying ? 'active' : 'inactive'}`}>
+            <h3 className="title">Last Played</h3>
+            <h4 className="subtitle">Maroon 5 - Sunday Morning</h4>
+          </div>
         </div>
       </div>
       <div className="box stations">B</div>
