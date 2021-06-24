@@ -114,7 +114,8 @@ export default () => {
             onPlay={handleAudioStateChange}
             onPause={handleAudioStateChange}
             onCanPlay={handleAudioReadinessChange}
-            src="https://masima.rastream.com/masima-pramborsjakarta"
+            // src="https://masima.rastream.com/masima-pramborsjakarta" // Prambors
+            src="https://stream.radiojar.com/rrqf78p3bnzuv" // Trax FM
             // src="https://foobar404.github.io/Wave.js/static/media/track2.6f56e4e3.mp3"
             // src="//stream.radiojar.com/7csmg90fuqruv.mp3"
           ></audio>
