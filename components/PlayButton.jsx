@@ -4,6 +4,7 @@ import { memo } from 'preact/compat';
 
 const PlayButton = ({
   handleStateChange,
+  isLoading = false,
   isPlaying = false,
   isReady = false,
 }) => {
@@ -19,22 +20,21 @@ const PlayButton = ({
   }, [isPlaying]);
 
   const handleCLick = useCallback(() => {
-    if (isReady) {
-      handleStateChange(!isPlaying);
-    }
-  }, [handleStateChange, isPlaying, isReady]);
+    if (isLoading) return;
+    handleStateChange(!isPlaying);
+  }, [handleStateChange, isPlaying, isLoading]);
 
   useEffect(() => {
     animate();
   }, [isPlaying]);
 
   return (
-    <div className={`play-btn ${isReady ? 'ready' : ''}`}>
+    <div className={`play-btn ${isLoading ? 'loading' : ''}`}>
       <svg
         width="48"
         onClick={handleCLick}
         viewBox="0 0 104 104"
-        className={isReady ? 'ready' : ''}
+        // className={isReady ? 'ready' : ''}
       >
         <circle
           id="circle"

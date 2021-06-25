@@ -71,6 +71,23 @@ ul {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  position: relative;
+}
+
+.now-playing.disabled::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #242423;
+  opacity: .7;
+}
+
+.now-playing.disabled > * {
+  text-align: right;
+  z-index: 1;
 }
 
 .now-playing .station-freq {
@@ -102,17 +119,17 @@ ul {
 }
 
 .play-btn svg {
-  opacity: 0;
+  opacity: 1;
   transition: opacity 300ms ease;
   animation-delay: 5s;
 }
 
-.play-btn.ready svg {
+.play-btn.loading svg {
   opacity: 1;
 }
 
 .play-btn::after {
-  opacity: 1;
+  opacity: 0;
   content: '';
   box-sizing: border-box;
   position: absolute;
@@ -128,11 +145,12 @@ ul {
   border-bottom-color: #fff;
   animation: spinner .8s ease infinite;
   transition: opacity 800ms ease-in-out;
+  pointer-events: none;
 }
 
-.play-btn.ready::after {
-  opacity: 0;
-  pointer-events: none;
+.play-btn.loading::after {
+  opacity: 1;
+  pointer-events: unset;
 }
 
 /* This animates the circle when it switches to play */

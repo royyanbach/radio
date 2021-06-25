@@ -1,4 +1,4 @@
-import { h, createRef } from 'preact';
+import { h, createRef, Fragment } from 'preact';
 import {
   useCallback,
   useEffect,
@@ -8,7 +8,7 @@ import {
 import debounce from 'lodash/debounce';
 import Wave from '@foobar404/wave';
 import PlayButton from './PlayButton';
-import { IS_PLAYING_EVENT_MAP, IS_READY_EVENT_MAP, STATIONS, WAVE_OPTS } from '../constants';
+import { IS_PLAYING_EVENT_MAP, STATIONS, WAVE_OPTS } from '../constants';
 
 export default () => {
   const audio = createRef();
@@ -16,21 +16,20 @@ export default () => {
 
   const [selectedStation, setSelectedStation] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isReady, setIsReady] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [wave] = useState(new Wave());
   const [controlContent, setControlContent] = useState(null);
-  const [audioPlayer, setAudioPlayer] = useState(new Audio());
 
   const handlePlayButtonStateChange = useCallback(
     (newIsPlayingState) => {
       setIsPlaying(newIsPlayingState);
       if (newIsPlayingState) {
-        audioPlayer.play();
+        audio.current.play();
       } else {
-        audioPlayer.pause();
+        audio.current.pause();
       }
     },
-    [audioPlayer]
+    [audio.current]
   );
 
   const handleAudioStateChange = useCallback(
@@ -46,48 +45,64 @@ export default () => {
 
   const handleAudioReadinessChange = useCallback((event) => {
     const { type } = event;
-    setIsReady(IS_READY_EVENT_MAP[type]);
+    setIsLoading(false);
     handlePlayButtonStateChange(true);
   }, []);
 
-  const setupRadio = useCallback(() => {
-    audioPlayer.id = 'audio';
-    audioPlayer.onplay = handleAudioStateChange;
-    audioPlayer.onpause = handleAudioStateChange;
-    audioPlayer.oncanplay = handleAudioReadinessChange;
-    console.log(document.getElementById('audio'));
-  }, [audioPlayer]);
+  const setupRadio = useCallback((src, { showVisualizer } = {}) => {
+    wave.stopStream();
+    if (audio.current) {
+      audio.current.src = null;
+      audio.current.remove();
+    }
+    document.querySelectorAll('audio').forEach(el => el.remove());
+    setIsLoading(true);
+    const _audio = new Audio();
+    _audio.id = 'radio';
+    _audio.onplay = handleAudioStateChange;
+    _audio.onpause = handleAudioStateChange;
+    _audio.oncanplay = handleAudioReadinessChange;
+    if (src) _audio.setAttribute('src', src);
+    document.body.appendChild(_audio);
+
+    if (showVisualizer) {
+      wave.fromElement('radio', 'viz', WAVE_OPTS);
+    } else {
+      const _dummyAudio = new Audio();
+      _dummyAudio.id = 'dummy-audio';
+      document.body.appendChild(_dummyAudio);
+      wave.fromElement('dummy-audio', 'viz', WAVE_OPTS);
+    }
+
+    audio.current = _audio;
+  }, [audio.current]);
 
   // Handle resize
   useLayoutEffect(() => {
     let canvasVizEl = canvasViz.current;
     function updateSize() {
-      const { offsetWidth } = canvasVizEl.parentNode;
-      canvasVizEl.width = offsetWidth - 5;
+      const { offsetWidth } = canvasVizEl && canvasVizEl.parentNode || {};
+      if (offsetWidth) canvasVizEl.width = offsetWidth - 5;
     }
     window.addEventListener('resize', updateSize);
     updateSize();
     return () => window.removeEventListener('resize', updateSize);
-  }, []);
+  }, [selectedStation, canvasViz.current]);
 
   useEffect(() => {
     setupRadio();
 
-    // Init wave for first time
-    wave.fromElement('audio', 'viz', WAVE_OPTS);
-
-    // Handle spacebar key press
-    const audioEl = audioPlayer;
+    // Toggle play/pause on spacebar key press
     const handleSpacePress = debounce((e) => {
       // Do nothing if not <space> key
-      if (e.keyCode !== 32) {
-        return;
-      }
+      if (e.keyCode !== 32) return;
+      // Do nothing if audio doesnt exist
+      if (!audio.current) return;
 
-      if (audioEl.paused) {
-        audioEl.play();
+      if (audio.current.paused) {
+        audio.current.play();
       } else {
-        audioEl.pause();
+        audio.current.pause();
       }
     }, 1000);
     document.body.onkeyup = handleSpacePress;
@@ -96,36 +111,44 @@ export default () => {
 
   useEffect(() => {
     if (selectedStation && selectedStation.streamUrl) {
-      audioPlayer.setAttribute('src', selectedStation.streamUrl);
+      setupRadio(selectedStation.streamUrl, {
+        showVisualizer: selectedStation.showVisualizer
+      });
     }
   }, [selectedStation]);
 
   return (
     <div className="container">
-      <div className="box now-playing">
-        <div className="text">
-          <h1 className="station-freq">{selectedStation && selectedStation.frequency}</h1>
-          <p className="station-name">{selectedStation && selectedStation.name}</p>
-        </div>
-        <div>
-          <canvas ref={canvasViz} id="viz" width="500" height="100"></canvas>
-        </div>
-        <div className="control">
-          <PlayButton
-            handleStateChange={handlePlayButtonStateChange}
-            isPlaying={isPlaying}
-            isReady={isReady}
-          />
-          <div className={`media-info animated ${isPlaying ? 'active' : 'inactive'}`}>
-            <h3 className="title">Last Played</h3>
-            <h4 className="subtitle">Maroon 5 - Sunday Morning</h4>
-          </div>
-        </div>
+      <div className={`box now-playing ${!selectedStation && 'disabled'}`}>
+        { selectedStation ? (
+          <>
+            <div className="text">
+              <h1 className="station-freq">{selectedStation && selectedStation.frequency}</h1>
+              <p className="station-name">{selectedStation && selectedStation.name}</p>
+            </div>
+            <div>
+              <canvas ref={canvasViz} id="viz" width="500" height="100"></canvas>
+            </div>
+            <div className="control">
+              <PlayButton
+                handleStateChange={handlePlayButtonStateChange}
+                isPlaying={isPlaying}
+                isLoading={isLoading}
+              />
+              <div className={`media-info animated ${isPlaying ? 'active' : 'inactive'}`}>
+                <h3 className="title">Last Played</h3>
+                <h4 className="subtitle">Maroon 5 - Sunday Morning</h4>
+              </div>
+            </div>
+          </>
+        ) : (
+          <p>Choose any station from the list »</p>
+        )}
       </div>
       <div className="box stations">
         <ul>
           {
-            STATIONS.map(({ frequency, name, streamUrl } = {}) => (
+            STATIONS.map(({ frequency, name, showVisualizer, streamUrl } = {}) => (
               <li key={frequency}>
                 <a
                   role="button"
@@ -134,6 +157,7 @@ export default () => {
                     setSelectedStation({
                       frequency,
                       name,
+                      showVisualizer,
                       streamUrl,
                     });
                   }}
