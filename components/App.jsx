@@ -8,6 +8,7 @@ import {
 import debounce from 'lodash/debounce';
 import Wave from '@foobar404/wave';
 import PlayButton from './PlayButton';
+import StationList from './StationList';
 import { IS_PLAYING_EVENT_MAP, STATIONS, WAVE_OPTS } from '../constants';
 
 export default () => {
@@ -49,39 +50,42 @@ export default () => {
     handlePlayButtonStateChange(true);
   }, []);
 
-  const setupRadio = useCallback((src, { showVisualizer } = {}) => {
-    wave.stopStream();
-    if (audio.current) {
-      audio.current.src = null;
-      audio.current.remove();
-    }
-    document.querySelectorAll('audio').forEach(el => el.remove());
-    setIsLoading(true);
-    const _audio = new Audio();
-    _audio.id = 'radio';
-    _audio.onplay = handleAudioStateChange;
-    _audio.onpause = handleAudioStateChange;
-    _audio.oncanplay = handleAudioReadinessChange;
-    if (src) _audio.setAttribute('src', src);
-    document.body.appendChild(_audio);
-
-    if (showVisualizer) {
+  const setupRadio = useCallback(
+    (src) => {
+      wave.stopStream();
+      if (audio.current) {
+        audio.current.src = null;
+        audio.current.remove();
+      }
+      document.querySelectorAll('audio').forEach((el) => el.remove());
+      setIsLoading(true);
+      const _audio = new Audio();
+      _audio.id = 'radio';
+      _audio.onplay = handleAudioStateChange;
+      _audio.onpause = handleAudioStateChange;
+      _audio.oncanplay = handleAudioReadinessChange;
+      if (src) _audio.setAttribute('src', src);
+      document.body.appendChild(_audio);
       wave.fromElement('radio', 'viz', WAVE_OPTS);
-    } else {
-      const _dummyAudio = new Audio();
-      _dummyAudio.id = 'dummy-audio';
-      document.body.appendChild(_dummyAudio);
-      wave.fromElement('dummy-audio', 'viz', WAVE_OPTS);
-    }
 
-    audio.current = _audio;
-  }, [audio.current]);
+      // if (showVisualizer) {
+      // } else {
+      //   const _dummyAudio = new Audio();
+      //   _dummyAudio.id = 'dummy-audio';
+      //   document.body.appendChild(_dummyAudio);
+      //   wave.fromElement('dummy-audio', 'viz', WAVE_OPTS);
+      // }
+
+      audio.current = _audio;
+    },
+    [audio.current]
+  );
 
   // Handle resize
   useLayoutEffect(() => {
     let canvasVizEl = canvasViz.current;
     function updateSize() {
-      const { offsetWidth } = canvasVizEl && canvasVizEl.parentNode || {};
+      const { offsetWidth } = (canvasVizEl && canvasVizEl.parentNode) || {};
       if (offsetWidth) canvasVizEl.width = offsetWidth - 5;
     }
     window.addEventListener('resize', updateSize);
@@ -111,23 +115,30 @@ export default () => {
 
   useEffect(() => {
     if (selectedStation && selectedStation.streamUrl) {
-      setupRadio(selectedStation.streamUrl, {
-        showVisualizer: selectedStation.showVisualizer
-      });
+      setupRadio(selectedStation.streamUrl);
     }
   }, [selectedStation]);
 
   return (
     <div className="container">
       <div className={`box now-playing ${!selectedStation && 'disabled'}`}>
-        { selectedStation ? (
+        {selectedStation ? (
           <>
             <div className="text">
-              <h1 className="station-freq">{selectedStation && selectedStation.frequency}</h1>
-              <p className="station-name">{selectedStation && selectedStation.name}</p>
+              <h1 className="station-freq">
+                {selectedStation && selectedStation.frequency}
+              </h1>
+              <p className="station-name">
+                {selectedStation && selectedStation.name}
+              </p>
             </div>
             <div>
-              <canvas ref={canvasViz} id="viz" width="500" height="100"></canvas>
+              <canvas
+                ref={canvasViz}
+                id="viz"
+                width="500"
+                height="100"
+              ></canvas>
             </div>
             <div className="control">
               <PlayButton
@@ -135,7 +146,11 @@ export default () => {
                 isPlaying={isPlaying}
                 isLoading={isLoading}
               />
-              <div className={`media-info animated ${isPlaying ? 'active' : 'inactive'}`}>
+              <div
+                className={`media-info animated ${
+                  isPlaying ? 'active' : 'inactive'
+                }`}
+              >
                 <h3 className="title">Last Played</h3>
                 <h4 className="subtitle">Maroon 5 - Sunday Morning</h4>
               </div>
@@ -145,31 +160,20 @@ export default () => {
           <p>Choose any station from the list »</p>
         )}
       </div>
-      <div className="box stations">
-        <ul>
-          {
-            STATIONS.map(({ frequency, name, showVisualizer, streamUrl } = {}) => (
-              <li key={frequency}>
-                <a
-                  role="button"
-                  onClick={() => {
-                    handlePlayButtonStateChange(false);
-                    setSelectedStation({
-                      frequency,
-                      name,
-                      showVisualizer,
-                      streamUrl,
-                    });
-                  }}
-                >
-                  <h4 className="station-name">{name}</h4>
-                  <p className="station-freq">{frequency}</p>
-                </a>
-              </li>
-            ))
-          }
-        </ul>
-      </div>
+      <StationList
+        onSelectStation={({
+          frequency,
+          name,
+          streamUrl,
+        } = {}) => {
+          handlePlayButtonStateChange(false);
+          setSelectedStation({
+            frequency,
+            name,
+            streamUrl,
+          });
+        }}
+      />
       {/* <div className="box recently-played">C</div>
       <div className="box meta">D</div> */}
     </div>
