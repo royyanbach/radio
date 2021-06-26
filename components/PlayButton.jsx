@@ -1,23 +1,17 @@
 import { h, createRef } from 'preact';
 import { useCallback, useEffect } from 'preact/hooks';
-import { memo } from 'preact/compat';
 
-const PlayButton = ({
+export default ({
   handleStateChange,
   isLoading = false,
   isPlaying = false,
-  isReady = false,
 }) => {
   const pauseToPlay = createRef();
   const playToPause = createRef();
 
-  const animate = useCallback(() => {
-    if (isPlaying) {
-      playToPause.current.beginElement();
-    } else {
-      pauseToPlay.current.beginElement();
-    }
-  }, [isPlaying]);
+  const animate = useCallback((element) => {
+    element.beginElement();
+  }, []);
 
   const handleCLick = useCallback(() => {
     if (isLoading) return;
@@ -25,8 +19,8 @@ const PlayButton = ({
   }, [handleStateChange, isPlaying, isLoading]);
 
   useEffect(() => {
-    animate();
-  }, [isPlaying]);
+    animate(isPlaying ? playToPause.current : pauseToPlay.current);
+  }, [isPlaying, playToPause.current, pauseToPlay.current]);
 
   return (
     <div className={`play-btn ${isLoading ? 'loading' : ''}`}>
@@ -34,7 +28,6 @@ const PlayButton = ({
         width="48"
         onClick={handleCLick}
         viewBox="0 0 104 104"
-        // className={isReady ? 'ready' : ''}
       >
         <circle
           id="circle"
@@ -88,4 +81,3 @@ const PlayButton = ({
   );
 };
 
-export default memo(PlayButton);

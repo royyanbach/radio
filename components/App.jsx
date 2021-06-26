@@ -57,9 +57,7 @@ export default () => {
     (event) => {
       const { type } = event;
       const newEventPlayingState = IS_PLAYING_EVENT_MAP[type];
-      if (newEventPlayingState !== isPlaying) {
-        setIsPlaying(newEventPlayingState);
-      }
+      setIsPlaying(newEventPlayingState);
     },
     [isPlaying]
   );
@@ -111,7 +109,7 @@ export default () => {
     window.addEventListener('resize', updateSize);
     updateSize();
     return () => window.removeEventListener('resize', updateSize);
-  }, [canvasViz.current]);
+  }, [selectedStation, canvasViz.current]);
 
   useEffect(() => {
     setupRadio();
@@ -145,7 +143,14 @@ export default () => {
 
   return (
     <div className="container">
-      <div className={`box now-playing ${!selectedStation && 'disabled'}`}>
+      <div
+        className={`box now-playing ${!selectedStation || (isPlaying && lastPlayedSong && lastPlayedSong.artwork_url_large) ? 'show-bg' : ''} ${!selectedStation ? 'disabled' : ''}`}
+        {...(lastPlayedSong && lastPlayedSong.artwork_url_large ? {
+          style: {
+            '--album-src': `url('${lastPlayedSong.artwork_url_large}')`
+          }
+        } : {})}
+      >
         {selectedStation ? (
           <>
             <div className="text">

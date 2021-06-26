@@ -74,7 +74,12 @@ ul {
   position: relative;
 }
 
-.now-playing.disabled::after {
+.now-playing > * {
+  z-index: 1;
+}
+
+.now-playing::before {
+  pointer-events: none;
   content: '';
   position: absolute;
   top: 0;
@@ -82,7 +87,16 @@ ul {
   width: 100%;
   height: 100%;
   background-color: #242423;
-  opacity: .7;
+  background-image: var(--album-src);
+  filter: brightness(0.3);
+  background-position: center center;
+  background-size: cover;
+  opacity: 0;
+}
+
+.now-playing.show-bg::before {
+  opacity: .8;
+  transition: all 300ms ease-in-out;
 }
 
 .now-playing.disabled > * {
@@ -106,7 +120,7 @@ ul {
 .control {
   display: flex;
   align-items: center;
-  flex-flow: row wrap;
+  flex-flow: row;
 }
 
 @keyframes spinner {
@@ -206,6 +220,7 @@ audio {
 
 .media-info {
   margin-left: 16px;
+  overflow: hidden;
 }
 
 .media-info * {
@@ -215,13 +230,16 @@ audio {
 
 .media-info .title {
   font-weight: 500;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   font-size: 20px;
 }
 
 .media-info .subtitle {
   font-weight: 200;
   font-size: 16px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .stations {
