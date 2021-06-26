@@ -111,7 +111,7 @@ export default () => {
     window.addEventListener('resize', updateSize);
     updateSize();
     return () => window.removeEventListener('resize', updateSize);
-  }, [selectedStation, canvasViz.current]);
+  }, [canvasViz.current]);
 
   useEffect(() => {
     setupRadio();
