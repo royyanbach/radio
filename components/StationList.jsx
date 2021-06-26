@@ -4,7 +4,7 @@ import { STATIONS } from '../constants';
 
 const STATION_LIST_API_URL = new URL(
   process.env.STATION_LIST_API_PATH,
-  process.env.STATION_LIST_API_HOST
+  process.env.RADIO_API_HOST,
 );
 
 export default ({ onSelectStation }) => {

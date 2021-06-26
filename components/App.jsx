@@ -11,15 +11,35 @@ import PlayButton from './PlayButton';
 import StationList from './StationList';
 import { IS_PLAYING_EVENT_MAP, STATIONS, WAVE_OPTS } from '../constants';
 
+const METADATA_API_URL = new URL(
+  process.env.METADATA_API_PATH,
+  process.env.RADIO_API_HOST,
+);
+
 export default () => {
   const audio = createRef();
   const canvasViz = createRef();
 
   const [selectedStation, setSelectedStation] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [lastPlayedSong, setLastPlayedSong] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [wave] = useState(new Wave());
   const [controlContent, setControlContent] = useState(null);
+
+  const fetchLastPlaying = useCallback((stationData) => {
+    if (!stationData || !stationData.stationId) {
+      return setLastPlayedSong(null);
+    }
+
+    fetch(new URL(stationData.stationId, METADATA_API_URL).href)
+    .then(res => res.json())
+    .then(data => {
+      if (data && data.radio_metadata) {
+        setLastPlayedSong(data.radio_metadata);
+      }
+    });
+  }, []);
 
   const handlePlayButtonStateChange = useCallback(
     (newIsPlayingState) => {
@@ -119,6 +139,10 @@ export default () => {
     }
   }, [selectedStation]);
 
+  useEffect(() => {
+    fetchLastPlaying(selectedStation);
+  }, [selectedStation]);
+
   return (
     <div className="container">
       <div className={`box now-playing ${!selectedStation && 'disabled'}`}>
@@ -148,11 +172,11 @@ export default () => {
               />
               <div
                 className={`media-info animated ${
-                  isPlaying ? 'active' : 'inactive'
+                  isPlaying && lastPlayedSong && lastPlayedSong.metadata ? 'active' : 'inactive'
                 }`}
               >
                 <h3 className="title">Last Played</h3>
-                <h4 className="subtitle">Maroon 5 - Sunday Morning</h4>
+                <h4 className="subtitle">{lastPlayedSong && lastPlayedSong.metadata}</h4>
               </div>
             </div>
           </>
@@ -164,12 +188,14 @@ export default () => {
         onSelectStation={({
           frequency,
           name,
+          stationId,
           streamUrl,
         } = {}) => {
           handlePlayButtonStateChange(false);
           setSelectedStation({
             frequency,
             name,
+            stationId,
             streamUrl,
           });
         }}
