@@ -1,4 +1,4 @@
-<img src="app.jpeg" alt="Radio App">
+<img src="app.png" alt="Radio App">
 
 # Radio
 My personal favourite radio station to listen to
