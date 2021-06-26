@@ -139,6 +139,10 @@ export default () => {
 
   useEffect(() => {
     fetchLastPlaying(selectedStation);
+    const timer = setInterval(() => {
+      fetchLastPlaying(selectedStation);
+    }, 15000);
+    return () => { clearInterval(timer); }
   }, [selectedStation]);
 
   return (
@@ -186,7 +190,10 @@ export default () => {
             </div>
           </>
         ) : (
-          <p>Choose any station from the list »</p>
+          <p>
+            Player is ready<br />
+            Choose any station from the list
+          </p>
         )}
       </div>
       <StationList

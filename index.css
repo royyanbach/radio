@@ -72,6 +72,7 @@ ul {
   flex-direction: column;
   justify-content: space-between;
   position: relative;
+  overflow: hidden;
 }
 
 .now-playing > * {
@@ -86,7 +87,7 @@ ul {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: #242423;
+  background-color: #bababa;
   background-image: var(--album-src);
   filter: brightness(0.3);
   background-position: center center;
@@ -100,9 +101,13 @@ ul {
   transition: all 300ms ease-in-out;
 }
 
-.now-playing.disabled > * {
-  text-align: right;
-  z-index: 1;
+.now-playing.disabled::before {
+  opacity: 1;
+}
+
+.now-playing.disabled {
+  justify-content: center;
+  text-align: center;
 }
 
 .now-playing .station-freq {
