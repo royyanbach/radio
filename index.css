@@ -92,6 +92,7 @@ ul {
   background-position: center center;
   background-size: cover;
   opacity: 0;
+  transition: all 300ms ease-in-out;
 }
 
 .now-playing.show-bg::before {
