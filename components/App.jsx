@@ -27,6 +27,33 @@ export default () => {
   const [wave] = useState(new Wave());
   const [controlContent, setControlContent] = useState(null);
 
+  const setMediaSessionMetadata = useCallback(({
+    artwork_url_small = '',
+    artwork_url_large = '',
+    metadata = '',
+  } = {}) => {
+    if ('mediaSession' in navigator && metadata) {
+      try {
+        const [artist, title] = metadata.split(' - ');
+        if (!artist || !title) {
+          navigator.mediaSession.metadata = null;
+          return;
+        }
+
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title,
+          artist,
+          artwork: [
+            { src: artwork_url_small, sizes: '96x96', type: 'image/png' },
+            { src: artwork_url_large, sizes: '512x512', type: 'image/png' },
+          ]
+        });
+      } catch (error) {
+        console.log(`The media session is not supported`);
+      }
+    }
+  }, []);
+
   const fetchLastPlaying = useCallback((stationData) => {
     if (!stationData || !stationData.stationId) {
       return setLastPlayedSong(null);
@@ -37,6 +64,7 @@ export default () => {
     .then(data => {
       if (data && data.radio_metadata) {
         setLastPlayedSong(data.radio_metadata);
+        setMediaSessionMetadata(data.radio_metadata);
       }
     });
   }, []);
@@ -197,6 +225,7 @@ export default () => {
         )}
       </div>
       <StationList
+        selectedStation={selectedStation}
         onSelectStation={({
           frequency,
           name,
@@ -204,6 +233,7 @@ export default () => {
           streamUrl,
         } = {}) => {
           handlePlayButtonStateChange(false);
+          setMediaSessionMetadata();
           setSelectedStation({
             frequency,
             name,

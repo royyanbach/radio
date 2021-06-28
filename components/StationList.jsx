@@ -7,8 +7,30 @@ const STATION_LIST_API_URL = new URL(
   process.env.RADIO_API_HOST,
 );
 
-export default ({ onSelectStation }) => {
+export default ({
+  onSelectStation,
+  selectedStation,
+}) => {
   const [stations, setStations] = useState([]);
+
+  const changeToNearestStation = useCallback(nextTrack => {
+    const currentStationIdx = [...stations].findIndex(station => station.stationId === (selectedStation && selectedStation.stationId))
+    if (currentStationIdx < 0) return;
+    const nextIdx = currentStationIdx + 1 > stations.length - 1 ? 0 : currentStationIdx + 1;
+    const prevIdx = currentStationIdx - 1 < 0 ? stations.length - 1 : currentStationIdx - 1;
+    onSelectStation([...stations][nextTrack ? nextIdx : prevIdx]);
+  }, [stations, onSelectStation, selectedStation]);
+
+  const setMediaSessionActionHandler = useCallback(() => {
+    if ('mediaSession' in navigator && Array.isArray(stations) && stations.length) {
+      try {
+        navigator.mediaSession.setActionHandler('nexttrack', () => changeToNearestStation(true));
+        navigator.mediaSession.setActionHandler('previoustrack', () => changeToNearestStation());
+      } catch (error) {
+        console.log(`The media session is not supported`);
+      }
+    }
+  }, [stations, changeToNearestStation]);
 
   const fetchStations = useCallback(() => {
     fetch(STATION_LIST_API_URL.href)
@@ -16,11 +38,15 @@ export default ({ onSelectStation }) => {
     .then(data => {
       setStations(data);
     });
-  }, []);
+  }, [setStations]);
 
   useEffect(() => {
     fetchStations();
   }, []);
+
+  useEffect(() => {
+    setMediaSessionActionHandler();
+  }, [stations, selectedStation]);
 
   return (
     <div className="box stations">
