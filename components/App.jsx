@@ -140,6 +140,11 @@ export default () => {
   }, [selectedStation, canvasViz.current]);
 
   useEffect(() => {
+    console.info(
+      'Made with %c♥%c hosted at https://github.com/royyanbach/radio',
+      'color: #e25555', 'color: unset'
+    );
+    console.info('Icon by https://www.freepik.com');
     setupRadio();
 
     // Toggle play/pause on spacebar key press
